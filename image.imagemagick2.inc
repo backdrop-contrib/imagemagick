@@ -56,6 +56,8 @@ function image_imagemagick2_convert($object){
 	return _imagemagick2_conjure($mslfile);
 }
 
+/* Converting the image.module image_resize to image_imagemagick2_convert('resize') */
+
 function image_imagemagick2_resize($source,$dest,$width,$height){
 	$convobj=new stdClass();
 	$convobj->source=$source;
@@ -226,13 +228,6 @@ function imagemagick2_transparent($params){
 
 
 
-/**
- * Helper function: Escape filename for Unix or Windows shell.
- *
- * @param $filename filename to escape -- may contain spaces or other problematic characters
- *
- * @return escaped version of $filename which should pass through shell
- */
 function _image2_escape_shell($filename) {
   if (strstr($_SERVER['SERVER_SOFTWARE'], 'Win32') || strstr($_SERVER['SERVER_SOFTWARE'], 'IIS')) {
     return '"' . addslashes($filename) . '"';
@@ -253,8 +248,8 @@ function _imagemagick2_conjure($mslcontents) {
   $mslfile=mslfile($mslcontents);
   $err = _image2_exec("$conjure_path $mslfile");
 
-  /* After finishing the conversion delete the mslfile */
-/*	unlink($mslfile); */
+  /* After finishing the conversion delete the mslfile . Instead of cleaning up using a cron job.*/
+	unlink($mslfile); 
  if ($err) {
     return false;
   }
