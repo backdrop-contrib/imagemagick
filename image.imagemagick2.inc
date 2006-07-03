@@ -96,7 +96,7 @@ function close_read_image($dest){
 
 
 /**
- * Resize an image to the given width and height
+ * Resize an image to the given width and height - Params(width,height)
  */
 function imagemagick2_resize($params) {
   $mslfile.='<scale ';
@@ -109,7 +109,7 @@ if($params['height'])
 }
 
 /**
- * Rotate an image
+ * Rotate an image - Params (degrees)
  */
 function imagemagick2_rotate($params) {
   $mslfile='<rotate degrees="'.$params['degrees'].'"/>';
@@ -117,7 +117,7 @@ function imagemagick2_rotate($params) {
 }
 
 /**
- * Crop an image to the specified dimensions
+ * Crop an image to the specified dimensions - Params (width,height,x,y)
  */
 function imagemagick2_crop($params) {
   $mslfile.='<crop ';
@@ -133,6 +133,10 @@ function imagemagick2_crop($params) {
   return $mslfile;
 }
 
+/*
+* Blur an Image - Params('radius','sigma')
+*/
+
 function imagemagick2_blur($params){
 	if(!$params['sigma']){
 		$params['sigma']=0;
@@ -142,6 +146,10 @@ function imagemagick2_blur($params){
     return $mslfile;
 }
 
+/*
+* Charcoal an image - Params('radius','sigma')
+*/
+
 function imagemagick2_charcoal($params){
 	if(!$params['sigma']){
 		$params['sigma']=0;
@@ -149,6 +157,9 @@ function imagemagick2_charcoal($params){
   $mslfile='<charcoal radius="'.$params['radius'].'" sigma="'.$params['sigma'].'"/>';
   return $mslfile;
 }
+/*
+* Emboss an image - Params('radius','sigma')
+*/
 
 function imagemagick2_emboss($params){
 	if(!$params['sigma']){
@@ -158,6 +169,9 @@ function imagemagick2_emboss($params){
   $mslfile='<emboss radius="'.$params['radius'].'" sigma="'.$params['sigma'].'"/>';
   return $mslfile;
 }
+/*
+* Sharpen an image - Params('radius','sigma')
+*/
 
 function imagemagick2_sharpen($params){
 if(!$params['sigma']){
@@ -168,6 +182,9 @@ if(!$params['sigma']){
   return $mslfile;
 }
 
+/* 
+* Swirl an image - Params('degrees')
+*/
 
 function imagemagick2_swirl($params){
   $mslfile='<swirl degrees="'.$params['degrees'].'"/>';
@@ -175,15 +192,24 @@ function imagemagick2_swirl($params){
 
 }
 
+/* 
+* Spread an image - Params('degrees')
+*/
+
 function imagemagick2_spread($params){
   $mslfile='<spread degrees="'.$params['degrees'].'"/>';
   return $mslfile;
 }
 
+/* 
+* Solarize an image - Params('threshold')
+*/
+
 function imagemagick2_solarize($params){
-  $mslfile='<spread threshold="'.$params['threshold'].'"/>';
+  $mslfile='<solarize threshold="'.$params['threshold'].'"/>';
   return $mslfile;
 }
+/* Some common functions flip,flop,magnify,miniify,normalize, trim */
 
 function imagemagick2_flip(){
   $mslfile='<flip/>';
@@ -220,6 +246,9 @@ function imagemagick2_trim(){
   return $mslfile;
 }
 
+/*
+Transparent an Image - Params('color')
+*/
 
 function imagemagick2_transparent($params){
   $mslfile='<transparent color="'.$params['color'].'"/>';
