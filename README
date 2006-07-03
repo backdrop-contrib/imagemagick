@@ -2,10 +2,46 @@
 *    Module: Imagemagick                                                                          *
 *    Author: Phani Kumar Arava (phani.arava@gmail.com)                                            *
 *    Start Date: 05/24/2006                                                                       *
-*    Updated Date: 05/24/2006                                                                     *
+*    Updated Date: 07/3/2006                                                                     *
+*    Tested with: Drupal-4.7.2
 ***************************************************************************************************
 
 Module Description:
 
 Integrate Imagemagick into Drupal.
 
+Files: imagemagick2.inc, README
+
+Copy the imagemagick2.inc into the includes diretory to get the advanced imagemagick2 toolkit option in the administer->settings->Image Handling Toolit.
+
+Select the Advanced Imagemagick Toolkit.
+
+The default image.module resize should work fine with this. Additional functionality will be written as a new module called image2.module
+
+Present Image Manipulation Functions:
+	1) Resize 
+	2) Crop
+	3) Blur
+	4) Rotate
+	5) Blur
+	6) Charcoal
+	7) Emboss
+	8) Sharpen
+	9) Swirl
+	10) Spread
+	11) Solarize
+	12) Flip
+	13) Flop
+	14) Magnify
+	15) Minify
+	16) Normalize
+	17) Trim
+	18) Transparent
+
+
+TODO: Write a image2.module which will have the following functionality (Showing the power of the imagemagick library)
+
+1) Upload a image. Save the origial image 
+2) Allow image manipulation.
+3) Save the original and the manipulated image as node
+	
