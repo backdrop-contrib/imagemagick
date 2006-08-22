@@ -1,0 +1,558 @@
+<?php
+
+/*
+ *
+ * Database definition:
+ * @code
+    CREATE TABLE magick_files (
+      imid int(10) unsigned NOT NULL default '0',
+      nid int(10) unsigned NOT NULL default '0',
+      imagename varchar(255) NOT NULL default '',
+      imagepath varchar(255) NOT NULL default '',
+ 		  imagemime varchar(255) NOT NULL default '',
+  		imagesize int(10) unsigned,			
+      PRIMARY KEY (imid),
+   )
+ * @endcode 
+
+
+
+*/
+
+function magickimage_help(){
+	switch($section){
+		case 'admin/modules#description':
+			return t('Allows you to apply Imagemagick functions on Images.');
+		case 'node/add/magickimage#description':
+			return t('Allows you to apply Imagemagick functions on Images.');
+		break;
+	}
+}
+
+function magickimage_node_info(){
+	return array('magickimage'=>array('name'=>t('Imagemagick Images'),'base'=>'magickimage'));
+}
+
+function magickimage_access($op,$node){
+	global $user;
+
+	if($op=='create'){
+		return user_access('create magick images');
+	}
+
+	if($op=='update' || $op=='delete'){
+		if($user->uid==$node->uid){
+			return TRUE;
+		}
+	}
+}
+
+
+function magickimage_perm(){
+	$perms[]='create magick images';
+	return $perms;
+}
+
+
+
+function magickimage_profiles(){
+	$magickprofiles=array();
+	if(empty($magickprofiles)){
+		$magickprofiles=module_invoke_all('magickprofiles');
+	}
+	return $magickprofiles;
+}
+
+function magickimage_effects(){
+	$magickeffects=array();
+	if(empty($magickeffects)){
+		$magickeffects=module_invoke_all('magickeffects');
+	}
+	return $magickeffects;
+}
+
+
+function magickimage_magickeffects(){
+	$effects=array();
+	
+	$effect=new StdClass();
+	$effect->name='flip';
+	$effect->params=array();
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='flop';
+	$effect->params=array();
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+
+	$effect=new StdClass();
+	$effect->name='crop';
+	$effect->params=array('width','height');
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='blur';
+	$effect->params=array('radius','sigma');
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='charcoal';
+	$effect->params=array('radius','sigma');
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+
+	$effect=new StdClass();
+	$effect->name='emboss';
+	$effect->params=array('radius','sigma');
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='sharpen';
+	$effect->params=array('radius','sigma');
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='swirl';
+	$effect->params=array('degrees');
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='spread';
+	$effect->params=array('degrees');
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='solarize';
+	$effect->params=array('degrees');
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+
+	$effect=new StdClass();
+	$effect->name='minify';
+	$effect->params=array();
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='magnify';
+	$effect->params=array();
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+
+	$effect=new StdClass();
+	$effect->name='normalize';
+	$effect->params=array();
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='trim';
+	$effect->params=array();
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='transparent';
+	$effect->params=array('color');
+	$effect->conjure=TRUE;
+	$effects[]=$effect;
+
+	$effect=new StdClass();
+	$efefct->name='raise';
+	$effect->params=array('value');
+	$effect->conjure=FALSE;
+	$efefcts[]=$effect;
+
+
+	$effect=new StdClass();
+	$efefct->name='thumbnail';
+	$effect->params=array('geomtery');
+	$effect->conjure=FALSE;
+	$efefcts[]=$effect;
+
+	$effect=new StdClass();
+	$effect->name='resize';
+	$effect->params=array('geometry');
+	$effect->conjure=FALSE;
+	$effects[]=$effect;
+
+
+	return $effects;
+
+}
+
+function magickimage_magickprofiles(){
+	$profiles=array();
+
+	$profile=new StdClass();
+	$profile->name='thumbnail';
+	$profile->filters=array();
+	$profile->filters[]=array('effect'=>'thumbnail','params'=>array('geometry'=>'100x100'));
+	$profiles[]=$profile;
+
+
+	$profile=new StdClass();
+	$profile->name='preview';
+	$profile->filters=array();
+	$profile->filters[]=array('effect'=>'resize','params'=>array('geometry'=>'400x400\>'));
+	$profiles[]=$profile;
+
+	$profile=new StdClass();
+	$profile->name='thumbnailflip';
+	$profile->filters=array();
+	$profile->filters[]=array('effect'=>'resize','params'=>array('width'=>100,'height'=>100));
+	$profile->filters[]=array('effect'=>'flip');
+	$profiles[]=$profile;
+
+	$profile=new StdClass();
+	$profile->name='resize200raise';
+	$profile->filters=array();
+	$profile->filters[]=array('effect'=>'resize','params'=>array('geometry'=>'200x200\>'));
+	$profile->filters[]=array('effect'=>'raise','params'=>array('value'=>'10x10'));
+	$profiles[]=$profile;
+
+	return $profiles;
+	
+}
+
+function magickimage_menu(){
+	if($may_cache){
+		$items[]=array('path'=>'node/add/magickimage','title'=>t('magick image'),'access'=>user_access('create magick images'));
+		$items[] = array('path' => 'image/view', 'title' => t('image'),
+                     'access' => user_access('access content'),
+                     'type' => MENU_CALLBACK,
+                     'callback' => 'magick_fetch');
+	}
+	return $items;
+}
+
+
+
+function magickimage_load(&$node){
+	$result=db_query("SELECT imagename,imagepath from {magick_files} WHERE nid=%d",$node->nid);
+
+	$node->images=array();
+
+	while ($file = db_fetch_object($result)) {
+//    $node->images[$file->filename] = $file->$filepath;
+  }
+
+}
+
+
+
+function magickimage_form(&$node,&$params){
+ $form['#attributes'] = array('enctype' => 'multipart/form-data');
+	$form['title']=array('#type'=>'textfield','#title'=>t('Title'),'#required'=>TRUE);
+	$form['file']=array('#type' => 'file', '#title' => t('Image'), '#description' => t('Click "Browse..." to select an image to upload.'), '#weight' => -3);
+
+	$form['images']=array('#type'=>'fieldset','#collapsible'=>TRUE,'#title'=>t('Imagemagick Profiles'));
+	$profiles=magickimage_profiles();
+	foreach($profiles as $profile){
+ 	$form['images'][$profile->name] = array('#type' => 'checkbox', '#title'=>t($profile->name),'#default_value' => $node->images[$profile->name]);
+
+	}
+
+
+	return $form;
+}
+
+
+function magickimage_validate(&$node){
+
+ if ($file = file_check_upload('file')) {
+    $node->file = $file;
+  }
+
+  // Make sure there is an upload or an existing file.
+  if (!$file && !file_exists($node->current_file)) {
+    form_set_error('file', t('A file must be provided.'));
+  }
+	$ret=FALSE;
+	$profiles=magickimage_profiles();
+	foreach($profiles as $profile){
+		$prfname=$profile->name;
+		if($node->$prfname){
+			$ret=TRUE;
+		}
+	}
+
+	if(!$ret){
+		drupal_set_message('Select One of the Profiles');
+		form_set_error('images',t('Select One of the profiles'));
+	}
+}
+
+
+function _derive_image($node,$original_image,$label){
+	$file=magickimage_magick($original_image,$label);
+	if(!$file){
+		drupal_set_message('Image Profile not created');
+		return FALSE;
+	}
+	$fid = db_next_id('{magick_files}_imid');
+	db_query("INSERT INTO {magick_files} (imid, nid, imagename, imagepath, imagemime, imagesize) VALUES (%d, %d, '%s', '%s', '%s', '%s')",$fid,$node->nid,$file->filename,$file->filepath,$file->filemime,$file->filesize);
+	return TRUE;
+}
+
+
+function magickimage_insert(&$node){
+  if ($file = file_check_upload('file')) {
+    $node->file = file_save_upload($file, file_directory_path(), false);
+  }
+
+	$file=$node->file;
+	$original_image=$file;
+	$fid = db_next_id('{magick_files}_imid');
+
+	db_query("INSERT INTO {magick_files} (imid, nid, imagename, imagepath, imagemime, imagesize) VALUES (%d, %d, '%s', '%s', '%s', '%s')",$fid,$node->nid,'_original',$file->filepath,$file->filemime,$file->filesize);
+
+	$profiles=magickimage_profiles();
+	
+	foreach($profiles as $profile){
+		$prfname=$profile->name;
+		if($node->$prfname){
+			if(!_derive_image($node,$original_image,$profile->name)){
+				drupal_set_message($profile->name." not created");
+			}
+		}
+	}
+}
+function magickimage_view(&$node, $teaser = 0, $page = 0){
+	$request = ($_GET['image']) ? $_GET['image'] : 'preview';
+  $request = check_plain($request);
+  $node = node_prepare($node, $teaser);
+#  $node->teaser = theme('magickimage_teaser', $node);
+  $node->body = theme('magickimage_body', $node, $request);
+}
+
+function theme_magickimage_body($node, $size) {
+	return theme('magickimage_display',$node,$label).$node->body;
+}
+
+function theme_magickimage_display($node, $label, $url, $attributes) {
+  return '<img src="'. check_url($url) .'" alt="'. check_plain($node->title) .'" title="'. check_plain($node->title) .'" '. drupal_attributes($attributes) .' />';
+}
+
+
+
+
+function magickeffect_load($effectname){
+	$effects=magickimage_effects();
+
+	foreach($effects as $effect){
+		if($effect->name==$effectname){
+			return $effect;
+		}
+	}
+	return FALSE;
+}
+
+
+function magickprofile_load($profilename){
+	$profiles=magickimage_profiles();
+	foreach($profiles as $profile){
+		if($profile->name==$profilename){
+			return $profile;
+		}
+	}
+	return FALSE;
+}
+
+/* Imagemagick Core . Creating MSL Files. Uding conjure and convert to create imagemagick images */
+
+function _magickimage_mslfile($effect,$filter){
+
+	$mslfile.="<".$effect->name." ";
+
+	foreach($effect->params as $param){
+		if(!is_null($filter['params'][$param])){
+			$mslfile.=$param.'='.'"'.$filter['params'][$param].'" ';
+		}
+	}
+	$mslfile.='/>';
+	return $mslfile;
+}
+
+function _magick_filename($imagepath,$label){
+	$pos = strrpos($imagepath, '.');
+	$filename = substr($imagepath, 0, $pos) .'_'. $label . substr($imagepath, $pos);	
+	return $filename;
+}
+
+
+
+function magickimage_magick($image,$profilename){
+
+	$profile=magickprofile_load($profilename);
+	if(!$profile){
+		drupal_set_message('No Such profile called '.$profilename);
+		return FALSE;
+	}
+	
+	foreach($profile->filters as $filter){
+		$effectname=$filter['effect'];
+		$effectparams=$filter['params'];
+		$effect=magickeffect_load($effectname);
+
+		if($effect->conjure){
+			$mslfile_.=_magickimage_mslfile($effect,$filter);
+
+		}else{
+		
+			$filtertxt="-".$filter['effect']." ";
+		
+			foreach($filter['params'] as $param){
+				$filtertxt.=$param." " ;
+			}
+			$image=_magickimage_convert($image,$filtertxt);
+		}
+	}
+	$mslfile=start_read_image($image->filepath);
+	$mslfile.=$mslfile_;
+	$mslfile.=close_read_image(_magick_filename($image->filepath,$profilename));
+
+	if(!_magickimage_conjure($mslfile)){
+		drupal_set_message('Something wrong when applying the Imagemagick Filter');
+		return FALSE;
+	}
+	if(file_exists(_magick_filename($image->filepath,$profilename))){
+		$image_new= new StdClass();
+		$image_new->filename=$profilename;
+		$image_new->filepath=_magick_filename($image->filepath,$profilename);
+		$imagedetails=image_get_info(_magick_filename($image->filepath,$profilename));
+		$image_new->filesize=$imagedetails['file_size'];
+		$image_new->filemime=$imagedetails['mime_type'];
+		return $image_new;	
+	}
+	else{
+		return FALSE;
+	}
+}
+
+
+
+
+function _magickimage_convert($image,$filter){
+	$convert_path=variable_get('convert_binary','/usr/bin/convert');
+	if (!file_exists($convert_path)) {
+    return false;
+  }
+
+  $filter = preg_replace("/[^A-Za-z0-9\.\-\+\040]/", '', $filter);
+  $source = _magickimage_shell($image->filepath);
+  $dest = _magickimage_shell($image->filepath);
+ $err = _magickimage_exec("$convert_path $filter $source $dest");
+	
+  if ($err) {
+    return false;
+  }
+  if (!file_exists(trim($dest, "'"))) {
+    return false;
+  }
+ 
+	
+	$image_new=new StdClass();
+	$image_new->filename=$image->filename;
+	$image_new->filepath=$image->filepath;
+	$imagedetails=image_get_info($image->filepath);
+	$image_new->filemime=$imagedetails['mime_type'];
+	$image_new->filesize=$imagedetails['file_size'];
+
+	return $image_new;	
+}
+
+function _magickimage_shell($filename){
+  if (strstr($_SERVER['SERVER_SOFTWARE'], 'Win32') || strstr($_SERVER['SERVER_SOFTWARE'], 'IIS')) {
+    return '"' . addslashes($filename) . '"';
+  } else {
+    return escapeshellarg($filename);
+  }
+
+}
+
+function mslfile($mslcontents){
+	$i=0;
+	$tmp_mslfile='files/tmp/tmp_file_'.$i;
+	while(file_exists($tmp_mslfile)){
+		$tmp_mslfile='files/tmp/tmp_file_'.$i;
+		$i++;
+	}
+	$fh=fopen($tmp_mslfile,'w');
+	fwrite($fh,$mslcontents);
+	fclose($fh);
+	return $tmp_mslfile;
+}
+
+function start_read_image($source){
+	$mslfile='<?xml version="1.0" encoding="UTF-8"?>'."\n";
+	$mslfile.='<image>'."\n";
+	$mslfile.='<read filename="'.$source.'" />'."\n";
+	return $mslfile;
+}
+
+function close_read_image($dest){
+	$mslfile='<write filename="'.$dest.'" />'."\n";
+	$mslfile.="</image>";
+	return $mslfile;
+}
+
+
+
+function _magickimage_escape_shell($filename) {
+  if (strstr($_SERVER['SERVER_SOFTWARE'], 'Win32') || strstr($_SERVER['SERVER_SOFTWARE'], 'IIS')) {
+    return '"' . addslashes($filename) . '"';
+  } else {
+    return escapeshellarg($filename);
+  }
+}
+
+/**
+ * Calls the conjure binary the mslfile.
+ */
+function _magickimage_conjure($mslcontents) {
+  $conjure_path = variable_get('imagemagick_conjure', '/usr/bin/conjure');
+  if (!file_exists($conjure_path)) {
+    return false;
+  }
+  
+  $mslfile=mslfile($mslcontents);
+  $err = _magickimage_exec("$conjure_path $mslfile");
+
+  /* After finishing the conversion delete the mslfile . Instead of cleaning up using a cron job.*/
+
+	unlink($mslfile); 
+ if ($err) {
+    return false;
+  }
+   
+  return true;
+}
+
+function _magickimage_exec($cmd) {
+  if (substr(php_uname(), 0, 7) == "Windows"){
+    if ($h = popen("start \"bla\" $cmd", "r")) {
+      pclose($h);
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return exec($cmd);    
+  }
+} 
+
+
+?>
