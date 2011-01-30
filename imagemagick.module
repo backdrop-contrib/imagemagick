@@ -7,7 +7,12 @@
  */
 
 /**
- * Implementation of hook_image_toolkits().
+ * @ingroup image
+ * @{
+ */
+
+/**
+ * Implements hook_image_toolkits().
  */
 function imagemagick_image_toolkits() {
   return array(
@@ -19,7 +24,7 @@ function imagemagick_image_toolkits() {
 }
 
 /**
- * Settings form for the toolkit.
+ * Retrieve settings for the ImageMagick toolkit.
  */
 function image_imagemagick_settings() {
   $form['imagemagick_quality'] = array(
@@ -63,6 +68,12 @@ function image_imagemagick_settings() {
   return $form;
 }
 
+function imagemagick_quality_element_validate($element) {
+  if ($element['#value'] < 0 || $element['#value'] > 100) {
+    form_error($element, t('!name must be a value between 0 and 100.', array('!name' => $element['#title'])));
+  }
+}
+
 function _imagemagick_build_version($form_element, $form_state) {
   // make sure path is set and valid before running after build.
   if ($path_errors = _imagemagick_check_path($form_state['values']['imagemagick_convert'])) {
@@ -91,28 +102,41 @@ function imagemagick_validate_path($element, &$form_state) {
   }
 }
 
-function imagemagick_quality_element_validate($element) {
-  if ($element['#value'] < 0 || $element['#value'] > 100) {
-    form_error($element, t('!name must be a value between 0 and 100.', array('!name' => $element['#title'])));
+/**
+ * Verify ImageMagick installation path.
+ *
+ * @return
+ *   A list of errors indicating whether ImageMagick could not be found on this machine.
+ */
+function _imagemagick_check_path($path) {
+  $errors = array();
+  if (!is_file($path)) {
+    $errors[] = t('The specified ImageMagick path %file does not exist.', array('%file' => $path));
   }
+  if (!$errors && !is_executable($path)) {
+    $errors[] = t('The specified ImageMagick path %file is not executable.', array('%file' => $path));
+  }
+  if ($errors && $open_basedir = ini_get('open_basedir')) {
+    $errors[] = t("PHP's <a href='!open-basedir'>open_basedir</a> security restriction is set to %open-basedir, which may be interfering with attempts to locate ImageMagick.", array('%file' => $path, '%open-basedir' => $open_basedir, '!info-link' => url('http://php.net/features.safe-mode#ini.open-basedir')));
+  }
+  return $errors;
 }
 
-function image_imagemagick_load(stdClass $image) {
-  $image->ops = array();
-  return $image;
-}
-
-function image_imagemagick_save(stdClass $image, $destination) {
-  return _imagemagick_convert($image->source, $destination, $image->ops);
-}
-
-function image_imagemagick_crop(stdClass $image, $x, $y, $width, $height) {
-  $image->ops[]  = '-crop '. (int) $width .'x'. (int) $height .'+'. (int) $x .'+'. (int) $y .'!';
-  $image->info['width'] = $width;
-  $image->info['height'] = $height;
-  return TRUE;
-}
-
+/**
+ * Scales an image to the specified size.
+ *
+ * @param $image
+ *   An image object. The $image->resource, $image->info['width'], and
+ *   $image->info['height'] values will be modified by this call.
+ * @param $width
+ *   The new width of the resized image, in pixels.
+ * @param $height
+ *   The new height of the resized image, in pixels.
+ * @return
+ *   TRUE or FALSE, based on success.
+ *
+ * @see image_resize()
+ */
 function image_imagemagick_resize(stdClass $image, $width, $height) {
   $image->ops[] = '-resize '. (int) $width .'x'. (int) $height .'!';
   $image->info['width'] = $width;
@@ -120,6 +144,25 @@ function image_imagemagick_resize(stdClass $image, $width, $height) {
   return TRUE;
 }
 
+/**
+ * Rotates an image the given number of degrees.
+ *
+ * @param $image
+ *   An image object. The $image->resource, $image->info['width'], and
+ *   $image->info['height'] values will be modified by this call.
+ * @param $degrees
+ *   The number of (clockwise) degrees to rotate the image.
+ * @param $background
+ *   An hexadecimal integer specifying the background color to use for the
+ *   uncovered area of the image after the rotation. E.g. 0x000000 for black,
+ *   0xff00ff for magenta, and 0xffffff for white. For images that support
+ *   transparency, this will default to transparent. Otherwise it will
+ *   be white.
+ * @return
+ *   TRUE or FALSE, based on success.
+ *
+ * @see image_rotate()
+ */
 function image_imagemagick_rotate(stdClass $image, $degrees, $background = NULL) {
   if (is_null($background)) {
     $image->ops[] = ' -rotate '. (float) $degrees;
@@ -136,15 +179,82 @@ function image_imagemagick_rotate(stdClass $image, $degrees, $background = NULL)
   return TRUE;
 }
 
+/**
+ * Crops an image to the given coordinates.
+ *
+ * @param $image
+ *   An image object. The $image->resource, $image->info['width'], and
+ *   $image->info['height'] values will be modified by this call.
+ * @param $x
+ *   The starting x offset at which to start the crop, in pixels.
+ * @param $y
+ *   The starting y offset at which to start the crop, in pixels.
+ * @param $width
+ *   The width of the cropped area, in pixels.
+ * @param $height
+ *   The height of the cropped area, in pixels.
+ * @return
+ *   TRUE or FALSE, based on success.
+ *
+ * @see image_crop()
+ */
+function image_imagemagick_crop(stdClass $image, $x, $y, $width, $height) {
+  $image->ops[]  = '-crop '. (int) $width .'x'. (int) $height .'+'. (int) $x .'+'. (int) $y .'!';
+  $image->info['width'] = $width;
+  $image->info['height'] = $height;
+  return TRUE;
+}
+
+/**
+ * Converts an image into grayscale.
+ *
+ * @param $image
+ *   An image object. The $image->resource value will be modified by this call.
+ * @return
+ *   TRUE or FALSE, based on success.
+ *
+ * @see image_desaturate()
+ */
+function image_imagemagick_desaturate(stdClass $image) {
+  $image->ops[] = '-colorspace GRAY';
+  return TRUE;
+}
+
 function image_imagemagick_sharpen(stdClass $image, $radius, $sigma, $amount, $threshold) {
   $unsharp_arg = $radius .'x'. $sigma .'+'. $amount/100 .'+'. $threshold;
   $image->ops[] = '-unsharp '. $unsharp_arg;
   return TRUE;
 }
 
-function image_imagemagick_desaturate(stdClass $image) {
-  $image->ops[] = '-colorspace GRAY';
-  return TRUE;
+/**
+ * Creates an image resource from a file.
+ *
+ * @param $image
+ *   An image object. The $image->resource value will populated by this call.
+ * @return
+ *   TRUE or FALSE, based on success.
+ *
+ * @see image_load()
+ */
+function image_imagemagick_load(stdClass $image) {
+  $image->ops = array();
+  return $image;
+}
+
+/**
+ * Writes an image resource to a destination file.
+ *
+ * @param $image
+ *   An image object.
+ * @param $destination
+ *   A string file URI or path where the image should be saved.
+ * @return
+ *   TRUE or FALSE, based on success.
+ *
+ * @see image_save()
+ */
+function image_imagemagick_save(stdClass $image, $destination) {
+  return _imagemagick_convert($image->source, $destination, $image->ops);
 }
 
 /**
@@ -161,20 +271,6 @@ function _imagemagick_convert($source, $dest, $args) {
     return FALSE;
   }
   return file_exists($dest);
-}
-
-function _imagemagick_check_path($path) {
-  $errors = array();
-  if (!is_file($path)) {
-    $errors[] = t('The specified ImageMagick path %file does not exist.', array('%file' => $path));
-  }
-  if (!$errors && !is_executable($path)) {
-    $errors[] = t('The specified ImageMagick path %file is not executable.', array('%file' => $path));
-  }
-  if ($errors && $open_basedir = ini_get('open_basedir')) {
-    $errors[] = t("PHP's <a href='!open-basedir'>open_basedir</a> security restriction is set to %open-basedir, which may be interfering with attempts to locate ImageMagick.", array('%file' => $path, '%open-basedir' => $open_basedir, '!info-link' => url('http://php.net/features.safe-mode#ini.open-basedir')));
-  }
-  return $errors;
 }
 
 function _imagemagick_convert_exec($command_args, &$output, &$errors) {
@@ -242,3 +338,7 @@ function _imagemagick_convert_exec($command_args, &$output, &$errors) {
   }
   return FALSE;
 }
+
+/**
+ * @} End of "ingroup image".
+ */
