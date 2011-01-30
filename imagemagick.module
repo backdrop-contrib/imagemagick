@@ -12,7 +12,7 @@
 function imagemagick_image_toolkits() {
   return array(
     'imagemagick' => array(
-      'title' => t('ImageMagick toolkit'),
+      'title' => t('ImageMagick'),
       'available' => TRUE,
     ),
   );
@@ -24,8 +24,8 @@ function imagemagick_image_toolkits() {
 function image_imagemagick_settings() {
   $form['imagemagick_quality'] = array(
     '#type' => 'textfield',
-    '#title' => t('Compression Quality'),
-    '#description' => t('Ranges from 0 to 100. Higher values mean better image quality, but bigger files.'),
+    '#title' => t('Image quality'),
+    '#description' => t('Define the image quality of processed images. Ranges from 0 to 100. Higher values mean better image quality but bigger files.'),
     '#size' => 10,
     '#maxlength' => 3,
     '#default_value' => variable_get('imagemagick_quality', 75),
@@ -33,29 +33,32 @@ function image_imagemagick_settings() {
     '#element_validate' => array('imagemagick_quality_element_validate'),
   );
 
-  $form['imagemagick_binary'] = array(
+  $form['imagemagick'] = array(
     '#type' => 'fieldset',
-    '#title' => t('ImageMagick Binary'),
+    '#title' => t('ImageMagick'),
     '#collapsible' => FALSE,
-    '#description' => t('ImageMagick is a standalone program used to manipulate images. To use it, it must be installed on your server and you need to know where it is located. If you are unsure of the exact path consult your ISP or server administrator.'),
+    '#description' => t('ImageMagick is a stand-alone program for image manipulation. It must be installed on the server and you need to know where it is located. Consult your server administrator or hosting provider for details.'),
   );
-  $form['imagemagick_binary']['imagemagick_convert'] = array(
+  $form['imagemagick']['imagemagick_convert'] = array(
     '#type' => 'textfield',
     '#title' => t('Path to the "convert" binary'),
     '#default_value' => variable_get('imagemagick_convert', '/usr/bin/convert'),
     '#required' => TRUE,
-    '#description' => t('Specify the complete path to the ImageMagic <kbd>convert</kbd> binary. For example: <kbd>/usr/bin/convert</kbd> or <kbd>C:\Program Files\ImageMagick-6.3.4-Q16\convert.exe</kbd>'),
+    '#description' => t('The complete path and filename of the ImageMagick <kbd>convert</kbd> binary. For example: <kbd>/usr/bin/convert</kbd> or <kbd>C:\Program Files\ImageMagick-6.3.4-Q16\convert.exe</kbd>'),
     '#element_validate' => array('imagemagick_validate_path'),
   );
-  $form['imagemagick_binary']['imagemagick_debugging'] = array(
+  // Prepare sub-element to output version or errors.
+  $form['imagemagick']['version'] = array();
+  $form['imagemagick']['#after_build'] = array('_imagemagick_build_version');
+
+  $form['imagemagick']['imagemagick_debugging'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display debugging information'),
     '#default_value' => variable_get('imagemagick_debugging', 0),
-    '#description' => t('Checking this option will display the ImageMagick commands and output to users with the <em>administer site configuration</em> permission.'),
-    '#weight' => 2,
+    '#description' => t('Shows ImageMagick commands and their output to users with the %permission permission.', array(
+      '%permission' => t('Administer site configuration'),
+    )),
   );
-  $form['imagemagick_binary']['version'] = array('#weight' => -1);
-  $form['imagemagick_binary']['#after_build'] = array('_imagemagick_build_version');
 
   return $form;
 }
@@ -65,35 +68,32 @@ function _imagemagick_build_version($form_element, $form_state) {
   if ($path_errors = _imagemagick_check_path($form_state['values']['imagemagick_convert'])) {
     // check here is primarily for pre-existing bad settings...
     // the #validate should prevent users from adding bad paths.
-    $form_element['imagemagick_binary'] = array(
+    $form_element['version'] = array(
       '#markup' => '<p class="error">'. implode('<br />', $path_errors) .'</p>',
     );
   }
   else {
     _imagemagick_convert_exec('-version', $output, $errors);
-    $form_element['imagemagick_binary']['version'] = array(
+    $form_element['version'] = array(
+      '#type' => 'item',
       '#title' => t('Version information'),
       '#markup' => '<pre>'. check_plain(trim($output)) .'</pre>',
-      '#description' => t('The ImageMagick <kbd>convert</kbd> binary was located and return this version information.'),
+      '#description' => t('ImageMagick was found and returns this version information.'),
     );
   }
-  $form_element['imagemagick_binary']['version']['#type'] = 'item';
-  $form_element['imagemagick_binary']['version']['#weight'] = -1;
   return $form_element;
 }
 
-function imagemagick_validate_path($element) {
-  if ($element['#post'] == 'imagemagick' && $errors = _imagemagick_check_path($element['#value'])) {
-    form_set_error($element['#parents'][0], implode('<br />', $errors));
+function imagemagick_validate_path($element, &$form_state) {
+  if ($form_state['values']['image_toolkit'] == 'imagemagick' && ($errors = _imagemagick_check_path($element['#value']))) {
+    form_error($element, implode('<br />', $errors));
     //form_set_value($element['#parents'][0], variable_get('imagemagick_convert', '/usr/bin/convert'));
-    return FALSE;
   }
-  return TRUE;
 }
 
 function imagemagick_quality_element_validate($element) {
   if ($element['#value'] < 0 || $element['#value'] > 100) {
-    form_set_error($element['#name'], t('Compression Quality must be a value between 0 and 100.'));
+    form_error($element, t('!name must be a value between 0 and 100.', array('!name' => $element['#title'])));
   }
 }
 

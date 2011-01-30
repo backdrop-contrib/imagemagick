@@ -6,3 +6,6 @@
  * Installation functions for ImageMagick module.
  */
 
+/**
+ * @todo Migrate ImageAPI ImageMagick variables.
+ */
