@@ -174,17 +174,19 @@ function image_imagemagick_resize(stdClass $image, $width, $height) {
  * @see image_rotate()
  */
 function image_imagemagick_rotate(stdClass $image, $degrees, $background = NULL) {
-  if (is_null($background)) {
+  if (!isset($background)) {
     $image->ops[] = ' -rotate ' . (float) $degrees;
   }
   else {
-    if (is_int($bgcolor)) {
-      $bgcolor = '#' . str_pad(dechex($bgcolor), 6, 0);
+    // image_rotate_effect() converts the #hexadecimal color representation into
+    // a decimal value (integer). Convert it back into a hexadecimal color.
+    if (is_int($background)) {
+      $background = '#' . str_pad(dechex($background), 6, 0, STR_PAD_LEFT);
     }
     else {
-      $bgcolor = str_replace('0x', '#', $bgcolor);
+      $background = strtr($background, array('0x' => '#'));
     }
-    $image->ops[] = '-background ' . escapeshellarg($bgcolor) . ' -rotate ' . (float) $degrees;
+    $image->ops[] = '-background ' . escapeshellarg($background) . ' -rotate ' . (float) $degrees;
   }
   return TRUE;
 }
@@ -399,8 +401,13 @@ function _imagemagick_convert_exec($command_args, &$output, &$errors) {
 
     // Display debugging information to authorized users.
     if (variable_get('imagemagick_debugging', FALSE) && user_access('administer site configuration')) {
-      drupal_set_message(t('ImageMagick command: @command', array('@command' => $convert_path . ' ' . $command_args)));
-      drupal_set_message(t('ImageMagick output: @output', array('@output' => $output)));
+      debug($convert_path . ' ' . $command_args, t('ImageMagick command'), TRUE);
+      if ($output !== '') {
+        debug($output, t('ImageMagick output'), TRUE);
+      }
+      if ($errors !== '') {
+        debug($errors, t('ImageMagick errors'), TRUE);
+      }
     }
 
     if ($return_code != 0) {
@@ -409,12 +416,15 @@ function _imagemagick_convert_exec($command_args, &$output, &$errors) {
       // eventually displayed to the user if configured to do so.
 
       // If $errors is empty, only report the error code.
-      if (empty($errors)) {
-        trigger_error(t('ImageMagick reported error code !code.', array('!code' => $return_code)), E_USER_ERROR);
+      if ($errors !== '') {
+        trigger_error(t('ImageMagick error @code', array('@code' => $return_code)), E_USER_ERROR);
       }
       // Otherwise report the error code, and the error message.
       else {
-        trigger_error(t("ImageMagick reported error code !code.\nMessage:\n!error", array('!code' => $return_code, '!error' => $errors)), E_USER_ERROR);
+        trigger_error(t('ImageMagick error @code: @error', array(
+          '@code' => $return_code,
+          '@error' => $errors,
+        )), E_USER_ERROR);
       }
     }
 

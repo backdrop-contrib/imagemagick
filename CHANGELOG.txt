@@ -2,6 +2,7 @@
 
 ImageMagick 7.x-1.x, xxxx-xx-xx
 -------------------------------
+#1045454 by sun: Fixed rotate action and debug output.
 #1045454 by sun: Fixed missing _get_info() toolkit callback and streamwrapper
   conversion.
 #1045454 by sun: Fixed various coding standards issues.
