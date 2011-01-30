@@ -2,6 +2,7 @@
 
 ImageMagick 7.x-1.x, xxxx-xx-xx
 -------------------------------
+#613814 by StephaneC, sun: Added support for convert executable in the path.
 #1045454 by andypost, sun: Added migration for ImageAPI ImageMagick variables.
 #373759 by sarvab, andypost, sun: Fixed negative offsets for crop action.
 #862406 by andypost: Fixed working directory on Windows.
