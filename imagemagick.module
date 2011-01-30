@@ -56,10 +56,10 @@ function image_imagemagick_settings() {
   $form['imagemagick']['version'] = array();
   $form['imagemagick']['#after_build'] = array('_imagemagick_build_version');
 
-  $form['imagemagick']['imagemagick_debugging'] = array(
+  $form['imagemagick']['imagemagick_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display debugging information'),
-    '#default_value' => variable_get('imagemagick_debugging', 0),
+    '#default_value' => variable_get('imagemagick_debug', 0),
     '#description' => t('Shows ImageMagick commands and their output to users with the %permission permission.', array(
       '%permission' => t('Administer site configuration'),
     )),
@@ -400,7 +400,7 @@ function _imagemagick_convert_exec($command_args, &$output, &$errors) {
     $return_code = proc_close($h);
 
     // Display debugging information to authorized users.
-    if (variable_get('imagemagick_debugging', FALSE) && user_access('administer site configuration')) {
+    if (variable_get('imagemagick_debug', FALSE) && user_access('administer site configuration')) {
       debug($convert_path . ' ' . $command_args, t('ImageMagick command'), TRUE);
       if ($output !== '') {
         debug($output, t('ImageMagick output'), TRUE);

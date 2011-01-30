@@ -7,5 +7,14 @@
  */
 
 /**
+ * Implements hook_uninstall().
+ */
+function imagemagick_uninstall() {
+  variable_del('imagemagick_quality');
+  variable_del('imagemagick_convert');
+  variable_del('imagemagick_debug');
+}
+
+/**
  * @todo Migrate ImageAPI ImageMagick variables.
  */
