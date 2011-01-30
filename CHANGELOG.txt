@@ -2,4 +2,5 @@
 
 ImageMagick 7.x-1.x, xxxx-xx-xx
 -------------------------------
+#1045454 by sun: Initial merge and rename from ImageAPI.
 #1028876 by sun: Added initial baseline of module files.
