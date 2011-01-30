@@ -212,7 +212,11 @@ function image_imagemagick_rotate(stdClass $image, $degrees, $background = NULL)
  * @see image_crop()
  */
 function image_imagemagick_crop(stdClass $image, $x, $y, $width, $height) {
-  $image->ops[] = '-crop ' . (int) $width . 'x' . (int) $height . '+' . (int) $x . '+' . (int) $y . '!';
+  // Even though the crop effect in Drupal core does not allow for negative
+  // offsets, ImageMagick supports them.
+  $x_signed = (((int) $x) >= 0 ? '+' : '-') . $x;
+  $y_signed = (((int) $y) >= 0 ? '+' : '-') . $y;
+  $image->ops[] = '-crop ' . (int) $width . 'x' . (int) $height . $x_signed . $y_signed . '!';
   $image->info['width'] = $width;
   $image->info['height'] = $height;
   return TRUE;
