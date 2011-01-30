@@ -1,0 +1,8 @@
+; $Id$
+name = ImageMagick
+description = Provides ImageMagick integration.
+;package = Multilingual
+core = 7.x
+configure = admin/config/.../imagemagick
+;dependencies[] = locale
+files[] = tests/imagemagick.test
