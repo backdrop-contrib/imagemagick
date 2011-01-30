@@ -12,7 +12,14 @@ To submit bug reports and feature suggestions, or to track changes:
 
 -- REQUIREMENTS --
 
-* @todo
+* ImageMagick (http://www.imagemagick.org) needs to be installed on your server
+  and the convert binary needs to be accessible and executable from PHP.
+
+* The PHP configuration must allow invocation of proc_open() (which is
+  security-wise identical to exec()).
+
+Consult your server administrator or hosting provider if you are unsure about
+these requirements.
 
 
 -- INSTALLATION --
@@ -22,12 +29,12 @@ To submit bug reports and feature suggestions, or to track changes:
 
 -- CONFIGURATION --
 
-* @todo
+* Go to Administration » Configuration » Media » Image toolkit and change the
+  image toolkit to ImageMagick.
 
-
--- USAGE --
-
-* @todo
+* If the convert binary cannot be found in the default shell path, you need to
+  enter the full path to ImageMagick's convert executable, including the
+  filename itself.
 
 
 -- CONTACT --

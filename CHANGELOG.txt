@@ -2,6 +2,11 @@
 
 ImageMagick 7.x-1.x, xxxx-xx-xx
 -------------------------------
+
+
+ImageMagick 7.x-1.0-ALPHA1, 2011-01-30
+--------------------------------------
+by sun: Added README.txt instructions.
 #613814 by StephaneC, sun: Added support for convert executable in the path.
 #1045454 by andypost, sun: Added migration for ImageAPI ImageMagick variables.
 #373759 by sarvab, andypost, sun: Fixed negative offsets for crop action.
