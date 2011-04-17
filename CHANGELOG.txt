@@ -1,6 +1,7 @@
 
 ImageMagick 7.x-1.x, xxxx-xx-xx
 -------------------------------
+#1045710 by sun: Added ImageMagick Advanced sub-module from Image project.
 #1045454 by sun: Fixed migration from ImageAPI ImageMagick upon installation.
 #1068980 by sun: Fixed errors not output on settings page.
 
