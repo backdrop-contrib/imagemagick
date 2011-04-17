@@ -102,7 +102,7 @@ function _imagemagick_build_version($element, &$form_state) {
   }
   if ($form_state['imagemagick_errors']) {
     $element['version'] = array(
-      '#markup' => '<p class="error">' . implode('<br />', $path_errors) . '</p>',
+      '#markup' => '<p class="error">' . implode('<br />', $form_state['imagemagick_errors']) . '</p>',
     );
   }
   else {
@@ -135,7 +135,7 @@ function _imagemagick_check_path($file) {
   if ($file == 'convert' && dirname($file) === '.') {
     $status = _imagemagick_convert_exec('-version', $output, $errors, $file);
     if ($status === 0) {
-      return $errors;
+      return array($errors);
     }
   }
 

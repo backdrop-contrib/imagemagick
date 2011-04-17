@@ -1,6 +1,7 @@
 
 ImageMagick 7.x-1.x, xxxx-xx-xx
 -------------------------------
+#1068980 by sun: Fixed errors not output on settings page.
 
 
 ImageMagick 7.x-1.0-ALPHA1, 2011-01-30
