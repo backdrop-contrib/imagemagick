@@ -444,7 +444,7 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$errors = NU
       // eventually displayed to the user if configured to do so.
 
       // If $errors is empty, only report the error code.
-      if ($errors !== '') {
+      if ($errors === '') {
         trigger_error(t('ImageMagick error @code', array('@code' => $return_code)), E_USER_ERROR);
       }
       // Otherwise report the error code, and the error message.
