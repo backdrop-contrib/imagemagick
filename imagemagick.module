@@ -89,7 +89,7 @@ function imagemagick_element_validate_path($element, &$form_state) {
     if ($status['errors']) {
       // Form API allows only one error per element, so we concatenate possibly
       // multiple errors.
-      form_error($element, implode('<br />', $errors));
+      form_error($element, implode('<br />', $status['errors']));
     }
   }
 }
