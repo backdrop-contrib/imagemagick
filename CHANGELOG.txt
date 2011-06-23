@@ -1,6 +1,7 @@
 
 ImageMagick 7.x-1.x, xxxx-xx-xx
 -------------------------------
+#1196008 by sun: Improved error handling.
 #1145432 by sun: Fixed error handling in image toolkit setup.
 #1183706 by smk-ka: Fixed negated condition always suppresses error messages.
 #1176172 by chx: Fixed calling crop without offsets leads to HTTP 500.

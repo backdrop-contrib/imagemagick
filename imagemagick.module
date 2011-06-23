@@ -427,6 +427,7 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
     // file paths don't have to be absolute.
     $convert_path = 'start "ImageMagick" /D ' . escapeshellarg($drupal_path) . ' /B ' . escapeshellarg($convert_path);
   }
+  $command = $convert_path . ' ' . $command_args;
 
   $descriptors = array(
     // stdin
@@ -436,7 +437,7 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
     // stderr
     2 => array('pipe', 'w'),
   );
-  if ($h = proc_open($convert_path . ' ' . $command_args, $descriptors, $pipes, $drupal_path)) {
+  if ($h = proc_open($command, $descriptors, $pipes, $drupal_path)) {
     $output = '';
     while (!feof($pipes[1])) {
       $output .= fgets($pipes[1]);
@@ -453,7 +454,7 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
 
     // Display debugging information to authorized users.
     if (variable_get('imagemagick_debug', FALSE) && user_access('administer site configuration')) {
-      debug($convert_path . ' ' . $command_args, t('ImageMagick command'), TRUE);
+      debug($command, t('ImageMagick command'), TRUE);
       if ($output !== '') {
         debug($output, t('ImageMagick output'), TRUE);
       }
@@ -468,12 +469,16 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
     if ($return_code != 0) {
       // If there is no error message, clarify this.
       if ($error === '') {
-        $error = t('(No message)');
+        $error = t('No error message.');
       }
-      trigger_error(t('ImageMagick error @code: @error', array(
+      // Format $error with as full message, passed by reference.
+      $error = t('ImageMagick error @code: !error', array(
         '@code' => $return_code,
-        '@error' => $error,
-      )), E_USER_ERROR);
+        '!error' => $error,
+      ));
+      // @todo Úse watchdog() instead? Would hide errors from users during
+      //   normal operation, regeardless of error_level setting.
+      trigger_error($error, E_USER_ERROR);
       // ImageMagick exited with an error code, return it.
       return $return_code;
     }
