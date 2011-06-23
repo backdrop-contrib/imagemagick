@@ -1,6 +1,10 @@
 
 ImageMagick 7.x-1.x, xxxx-xx-xx
 -------------------------------
+
+
+ImageMagick 7.x-1.0-ALPHA2, 2011-06-23
+--------------------------------------
 #1196008 by sun: Improved error handling.
 #1145432 by sun: Fixed error handling in image toolkit setup.
 #1183706 by smk-ka: Fixed negated condition always suppresses error messages.
