@@ -476,7 +476,7 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
         '@code' => $return_code,
         '!error' => $error,
       ));
-      // @todo Úse watchdog() instead? Would hide errors from users during
+      // @todo Use watchdog() instead? Would hide errors from users during
       //   normal operation, regeardless of error_level setting.
       trigger_error($error, E_USER_ERROR);
       // ImageMagick exited with an error code, return it.
