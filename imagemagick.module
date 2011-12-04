@@ -220,19 +220,17 @@ function image_imagemagick_resize(stdClass $image, $width, $height) {
  */
 function image_imagemagick_rotate(stdClass $image, $degrees, $background = NULL) {
   if (!isset($background)) {
-    $image->ops[] = ' -rotate ' . (float) $degrees;
+    $background = 'transparent';
+  }
+  // image_rotate_effect() converts the #hexadecimal color representation into
+  // a decimal value (integer). Convert it back into a hexadecimal color.
+  elseif (is_int($background)) {
+    $background = '#' . str_pad(dechex($background), 6, 0, STR_PAD_LEFT);
   }
   else {
-    // image_rotate_effect() converts the #hexadecimal color representation into
-    // a decimal value (integer). Convert it back into a hexadecimal color.
-    if (is_int($background)) {
-      $background = '#' . str_pad(dechex($background), 6, 0, STR_PAD_LEFT);
-    }
-    else {
-      $background = strtr($background, array('0x' => '#'));
-    }
-    $image->ops[] = '-background ' . escapeshellarg($background) . ' -rotate ' . (float) $degrees;
+    $background = strtr($background, array('0x' => '#'));
   }
+  $image->ops[] = '-background ' . escapeshellarg($background) . ' -rotate ' . (float) $degrees;
   return TRUE;
 }
 
