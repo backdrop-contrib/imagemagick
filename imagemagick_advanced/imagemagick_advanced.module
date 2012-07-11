@@ -146,6 +146,7 @@ function imagemagick_advanced_image_effect_info() {
     'label' => t('Strip metadata'),
     'help' => t('Resizing will make images an exact set of dimensions. This may cause images to be stretched or shrunk disproportionately.'),
     'effect callback' => 'imagemagick_advanced_strip_effect',
+    'dimensions passthrough' => TRUE,
   );
   return $effects;
 }
