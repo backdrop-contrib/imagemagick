@@ -1,7 +1,0 @@
-name = ImageMagick testing
-description = Tests ImageMagick module functionality. Do not enable.
-core = 7.x
-package = Testing
-hidden = TRUE
-dependencies[] = imagemagick
-files[] = imagemagick_test.module
