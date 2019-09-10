@@ -26,12 +26,14 @@ function imagemagick_image_toolkits() {
  * Retrieve settings for the ImageMagick toolkit.
  */
 function image_imagemagick_settings() {
+  $config = config('system.core');
+
   $form['imagemagick_quality'] = array(
     '#type' => 'textfield',
     '#title' => t('Image quality'),
     '#size' => 10,
     '#maxlength' => 3,
-    '#default_value' => variable_get('imagemagick_quality', 75),
+    '#default_value' => $config->get('imagemagick_quality'),
     '#field_suffix' => '%',
     '#element_validate' => array('imagemagick_element_validate_quality'),
     '#description' => t('Define the image quality of processed images. Ranges from 0 to 100. Higher values mean better image quality but bigger files.'),
@@ -48,13 +50,13 @@ function image_imagemagick_settings() {
     '#title' => t('Enable <a href="@gm-url">GraphicsMagick</a> support', array(
       '@gm-url' => 'http://www.graphicsmagick.org',
     )),
-    '#default_value' => variable_get('imagemagick_gm', 0),
+    '#default_value' => $config->get('imagemagick_gm'),
     '#weight' => -5,
   );
   $form['imagemagick']['imagemagick_convert'] = array(
     '#type' => 'textfield',
     '#title' => t('Path to the "convert" binary'),
-    '#default_value' => variable_get('imagemagick_convert', 'convert'),
+    '#default_value' => $config->get('imagemagick_convert'),
     '#required' => TRUE,
     '#element_validate' => array('imagemagick_element_validate_path'),
     '#weight' => -10,
@@ -67,7 +69,7 @@ function image_imagemagick_settings() {
   $form['imagemagick']['imagemagick_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display debugging information'),
-    '#default_value' => variable_get('imagemagick_debug', 0),
+    '#default_value' => $config->get('imagemagick_debug'),
     '#description' => t('Shows ImageMagick commands and their output to users with the %permission permission.', array(
       '%permission' => t('Administer site configuration'),
     )),
@@ -264,7 +266,7 @@ function image_imagemagick_rotate(stdClass $image, $degrees, $background = NULL)
  * @see image_crop()
  */
 function image_imagemagick_crop(stdClass $image, $x, $y, $width, $height) {
-  // Even though the crop effect in Drupal core does not allow for negative
+  // Even though the crop effect in Backdrop core does not allow for negative
   // offsets, ImageMagick supports them. Also note: if $x and $y are set to
   // NULL then crop will create tiled images so we convert these to ints.
   $image->ops[] = sprintf('-crop %dx%d%+d%+d!', $width, $height, $x, $y);
@@ -303,7 +305,7 @@ function image_imagemagick_desaturate(stdClass $image) {
 function image_imagemagick_load(stdClass $image) {
   $image->ops = array();
 
-  drupal_alter('imagemagick_load', $image);
+  backdrop_alter('imagemagick_load', $image);
 
   return $image;
 }
@@ -325,7 +327,7 @@ function image_imagemagick_save(stdClass $image, $destination) {
   $context = array(
     'destination' => $destination,
   );
-  drupal_alter('imagemagick_save', $image, $context);
+  backdrop_alter('imagemagick_save', $image, $context);
 
   return _imagemagick_convert($image->source, $destination, $image->ops);
 }
@@ -347,7 +349,7 @@ function image_imagemagick_save(stdClass $image, $destination) {
  */
 function image_imagemagick_get_info(stdClass $image) {
   $details = FALSE;
-  $data = getimagesize(drupal_realpath($image->source));
+  $data = getimagesize(backdrop_realpath($image->source));
 
   if (isset($data) && is_array($data)) {
     $extensions = array('1' => 'gif', '2' => 'jpg', '3' => 'png');
@@ -371,11 +373,11 @@ function _imagemagick_convert($source, $destination, $args) {
   $source_original = $source;
   $destination_original = $destination;
 
-  $source = drupal_realpath($source);
-  $destination = drupal_realpath($destination);
+  $source = backdrop_realpath($source);
+  $destination = backdrop_realpath($destination);
   $destination_format = '';
 
-  $args['quality'] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
+  $args['quality'] = '-quality ' . escapeshellarg(config_get('system.core','imagemagick_quality'));
 
   // Allow other modules to alter the ImageMagick command line parameters.
   $context = array(
@@ -385,7 +387,7 @@ function _imagemagick_convert($source, $destination, $args) {
     'destination_original' => $destination_original,
     'destination_format' => &$destination_format,
   );
-  drupal_alter('imagemagick_arguments', $args, $context);
+  backdrop_alter('imagemagick_arguments', $args, $context);
 
   // If the format of the derivative image was changed, concatenate the new
   // image format and the destination path, delimited by a colon.
@@ -401,7 +403,7 @@ function _imagemagick_convert($source, $destination, $args) {
   // GraphicsMagick arguments:
   // gm convert [options] input output
   // @see http://www.graphicsmagick.org/GraphicsMagick.html
-  if (variable_get('imagemagick_gm', 0)) {
+  if (config_get('system.core','imagemagick_gm')) {
     array_unshift($args, 'convert');
     $args[] = escapeshellarg($source);
     $args[] = escapeshellarg($destination_format);
@@ -448,14 +450,14 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
     // By using a default of NULL, we force users to setup the toolkit through
     // the image toolkit administration UI. Sites enforcing a path via
     // settings.php should know what they are doing.
-    $convert_path = variable_get('imagemagick_convert', NULL);
+    $convert_path = config_get('system.core','imagemagick_convert');
     if (!isset($convert_path)) {
       return FALSE;
     }
   }
 
-  // Use Drupal's root as working directory to resolve relative paths correctly.
-  $drupal_path = DRUPAL_ROOT;
+  // Use Backdrop's root as working directory to resolve relative paths correctly.
+  $backdrop_path = BACKDROP_ROOT;
 
   if (strstr($_SERVER['SERVER_SOFTWARE'], 'Win32') || strstr($_SERVER['SERVER_SOFTWARE'], 'IIS')) {
     // Use Window's start command with the /B flag to make the process run in
@@ -463,7 +465,7 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
     // @see http://us3.php.net/manual/en/function.exec.php#56599
     // Use /D to run the command from PHP's current working directory so the
     // file paths don't have to be absolute.
-    $convert_path = 'start "ImageMagick" /D ' . escapeshellarg($drupal_path) . ' /B ' . escapeshellarg($convert_path);
+    $convert_path = 'start "ImageMagick" /D ' . escapeshellarg($backdrop_path) . ' /B ' . escapeshellarg($convert_path);
   }
   $command = $convert_path . ' ' . $command_args;
 
@@ -475,7 +477,7 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
     // stderr
     2 => array('pipe', 'w'),
   );
-  if ($h = proc_open($command, $descriptors, $pipes, $drupal_path)) {
+  if ($h = proc_open($command, $descriptors, $pipes, $backdrop_path)) {
     $output = '';
     while (!feof($pipes[1])) {
       $output .= fgets($pipes[1]);
@@ -491,7 +493,7 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
     $return_code = proc_close($h);
 
     // Display debugging information to authorized users.
-    if (variable_get('imagemagick_debug', FALSE) && user_access('administer site configuration')) {
+    if (config_get('system.core','imagemagick_debug') && user_access('administer site configuration')) {
       debug($command, t('ImageMagick command'), TRUE);
       if ($output !== '') {
         debug($output, t('ImageMagick output'), TRUE);
@@ -502,7 +504,7 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
     }
 
     // If ImageMagick returned a non-zero code, trigger a PHP error that will
-    // be caught by Drupal's error handler, logged to the watchdog and
+    // be caught by Backdrop's error handler, logged to the watchdog and
     // eventually displayed to the user if configured to do so.
     if ($return_code != 0) {
       // If there is no error message, clarify this.
@@ -514,9 +516,12 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
         '@code' => $return_code,
         '!error' => $error,
       ));
-      // @todo Use watchdog() instead? Would hide errors from users during
-      //   normal operation, regeardless of error_level setting.
-      trigger_error($error, E_USER_ERROR);
+
+      watchdog('imagemagick', $error, array(), WATCHDOG_ERROR);
+      if (array('administer site configuration')) {
+        drupal_set_message($error, 'error');
+      }
+
       // ImageMagick exited with an error code, return it.
       return $return_code;
     }

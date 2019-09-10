@@ -9,47 +9,61 @@
  * Implements hook_install().
  */
 function imagemagick_install() {
-  // Migrate ImageAPI ImageMagick variables upon installation.
-  $value = variable_get('imageapi_imagemagick_quality', NULL);
-  if (!empty($value)) {
-    variable_set('imagemagick_quality', $value);
-  }
-  variable_del('imageapi_imagemagick_quality');
-
-  $value = variable_get('imageapi_imagemagick_convert', NULL);
-  if (!empty($value)) {
-    variable_set('imagemagick_convert', $value);
-
-    // If we have a convert path and previous toolkit was ImageAPI's
-    // ImageMagick, also switch the toolkit.
-    $value = variable_get('image_toolkit', 'gd');
-    if ($value == 'imageapi_imagemagick') {
-      variable_set('image_toolkit', 'imagemagick');
-    }
-  }
-  variable_del('imageapi_imagemagick_convert');
-
-  $value = variable_get('imageapi_imagemagick_debugging', NULL);
-  if (!empty($value)) {
-    variable_set('imagemagick_debug', $value);
-  }
-  variable_del('imageapi_imagemagick_debugging');
-
-  // Disable ImageAPI ImageMagick module if it is enabled to avoid confusion.
-  if (module_exists('imageapi_imagemagick')) {
-    module_disable(array('imageapi_imagemagick'));
-    drupal_set_message(t('ImageAPI ImageMagick module has been disabled.'));
-  }
+  // Add image toolkit settings to core config.
+  $config = config('system.core');
+  $config->set('imagemagick_quality', 75);
+  $config->set('imagemagick_gm', FALSE);
+  $config->set('imagemagick_convert', 'convert');
+  $config->set('imagemagick_debug', FALSE);
+  $config->save();
 }
 
 /**
  * Implements hook_uninstall().
  */
 function imagemagick_uninstall() {
-  variable_del('imagemagick_quality');
-  variable_del('imagemagick_convert');
-  variable_del('imagemagick_debug');
-  variable_del('imagemagick_gm');
+  // Remove image toolkit settings to core config.
+  $config = config('system.core');
+  $config->clear('imagemagick_quality');
+  $config->clear('imagemagick_gm');
+  $config->clear('imagemagick_convert');
+  $config->clear('imagemagick_debug');
+  $config->save();
+}
+
+/**
+ * Move settings from variables to config.
+ */
+function imagemagick_update_1000() {
+  // Migrate variables to config, also convert any older ImageAPI ImageMagick variables.
+  $config = config('system.core');
+  $config->set('imagemagick_quality', update_variable_get('imageapi_imagemagick_quality',''));
+  $config->set('imagemagick_quality', update_variable_get('imagemagick_quality',''));
+  $config->set('imagemagick_convert', update_variable_get('imageapi_imagemagick_convert',''));
+  $config->set('imagemagick_convert', update_variable_get('imagemagick_convert',''));
+  $config->set('imagemagick_debug', update_variable_get('imageapi_imagemagick_debugging',''));
+  $config->set('imagemagick_debug', update_variable_get('imagemagick_debug',''));
+  $config->set('imagemagick_gm', update_variable_get('imagemagick_gm',''));
+  $config->save();
+
+  // If we have a convert path and previous toolkit was ImageAPI's
+  // ImageMagick, also switch the toolkit.
+  $value = update_variable_get('imageapi_imagemagick_convert');
+  if (!empty($value)) {
+    $value = update_variable_get('image_toolkit');
+    if ($value == 'imageapi_imagemagick') {
+      config_set('system.core','image_toolkit', 'imagemagick');
+    }
+  }
+
+  // Delete old variables.
+  update_variable_del('imageapi_imagemagick_quality');
+  update_variable_del('imagemagick_quality');
+  update_variable_del('imageapi_imagemagick_convert');
+  update_variable_del('imagemagick_convert');
+  update_variable_del('imageapi_imagemagick_debugging');
+  update_variable_del('imagemagick_debug');
+  update_variable_del('imagemagick_gm');
 }
 
 /**
@@ -58,4 +72,3 @@ function imagemagick_uninstall() {
 function imagemagick_update_last_removed() {
   return 7000;
 }
-

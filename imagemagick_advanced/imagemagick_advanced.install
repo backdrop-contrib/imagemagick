@@ -6,11 +6,24 @@
  */
 
 /**
- * Implements hook_uninstall().
+ * Move settings from variables to config.
  */
-function imagemagick_advanced_uninstall() {
-  variable_del('imagemagick_advanced_density');
-  variable_del('imagemagick_advanced_colorspace');
-  variable_del('imagemagick_advanced_profile');
+function imagemagick_advanced_update_1000() {
+  $config = config('imagemagick_advanced.settings');
+  $config->set('imagemagick_advanced_density', update_variable_get('imagemagick_advanced_density',0));
+  $config->set('imagemagick_advanced_colorspace', update_variable_get('imagemagick_advanced_colorspace',0));
+  $config->set('imagemagick_advanced_profile', update_variable_get('imagemagick_advanced_profile',''));
+  $config->save();
+
+  // Delete variables.
+  update_variable_del('imagemagick_advanced_density');
+  update_variable_del('imagemagick_advanced_colorspace');
+  update_variable_del('imagemagick_advanced_profile');
 }
 
+/**
+ * Implements hook_update_last_removed().
+ */
+function imagemagick_advanced_update_last_removed() {
+  return 7000;
+}

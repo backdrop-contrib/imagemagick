@@ -1,4 +1,5 @@
+type = module
 name = ImageMagick Advanced
 description = Provides advanced ImageMagick effects and options.
-core = 7.x
+backdrop = 1.x
 dependencies[] = imagemagick
