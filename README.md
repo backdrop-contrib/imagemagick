@@ -9,7 +9,7 @@ Installation
 - Install this module using the official Backdrop CMS instructions at
   https://backdropcms.org/guide/modules.
 
-- Go to Administration > Configuration > Media > Image toolkit 
+- Go to Administration > Configuration > Media > Image toolkit
   (admin/config/media/image-toolkit) and change the image toolkit to ImageMagick.
 
 - If the convert binary cannot be found in the default shell path, you need to
@@ -38,12 +38,13 @@ Current Maintainers
 -------------------
 
 - Jen Lampton (https://github.com/jenlampton).
+- Seeking additional maintainers.
 
 Credits
 -------
 
-- Ported to Backdrop CMS by Kevin Thull (https://github.com/kthull).
-- Originally written for Drupal by Daniel F. Kudwien ("sun", http://drupal.org/user/54136).
+- Ported to Backdrop CMS by [Kevin Thull](https://github.com/kthull).
+- Originally written for Drupal by Daniel F. Kudwien [sun](http://drupal.org/user/54136).
 
 License
 -------
