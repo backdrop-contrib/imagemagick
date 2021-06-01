@@ -72,7 +72,7 @@ function imagemagick_advanced_imagemagick_arguments_alter(&$args, $context) {
     $args['density'] = "-density {$density} -units PixelsPerInch";
   }
   // Apply color profile.
-  if ($profile = conig_get('imagemagick_advanced.settings','imagemagick_advanced_profile')) {
+  if ($profile = config_get('imagemagick_advanced.settings','imagemagick_advanced_profile')) {
     if (file_exists($profile)) {
       $args['profile'] = '-profile ' . escapeshellarg($profile);
     }
