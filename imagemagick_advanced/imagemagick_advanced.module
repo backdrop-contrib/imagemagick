@@ -137,9 +137,9 @@ function image_imagemagick_auto_orient(stdClass $image) {
  *
  * @see image_sharpen()
  */
-function image_imagemagick_sharpen(stdClass $image, $radius = 0.5, $sigma = 0.5, $amount = 100, $threshold = 0.05) {
-  $unsharp_arg = $radius . 'x' . $sigma . '+' . $amount / 100 . '+' . $threshold;
-  $image->ops[] = '-unsharp ' . $unsharp_arg;
+function image_imagemagick_sharpen(stdClass $image, $args) {
+  var_dump($args);
+  $image->ops[] = '-unsharp ' . $args;
   return TRUE;
 }
 
@@ -175,6 +175,12 @@ function imagemagick_advanced_image_effect_info() {
     'label' => t('Automatically correct orientation'),
     'help' => t('Automatically rotates images according to orientation flag set by many phones and digital cameras.'),
     'effect callback' => 'imagemagick_advanced_auto_orient_effect',
+  );
+  $effects['imagemagick_sharpen'] = array(
+    'label' => t('Sharpen'),
+    'help' => t('Sharpens image.'),
+    'effect callback' => 'imagemagick_advanced_sharpen_effect',
+    'form callback' => 'imagemagick_advanced_sharpen_effect_form',
   );
   return $effects;
 }
@@ -228,3 +234,77 @@ function imagemagick_advanced_auto_orient_effect($image) {
   return TRUE;
 }
 
+/**
+ * Image effect callback; Sharpens image.
+ *
+ * @param $image
+ *   An image object returned by image_load().
+ *
+ * @return
+ *   TRUE on success. FALSE on failure.
+ *
+ * @see imagemagick_sharpen()
+ */
+function imagemagick_advanced_sharpen_effect($image, $data) {
+  //Calculate arguments string from the form input data.
+  $args = array($data['radius'] . 'x' . $data['sigma'] . '+' . $data['amount'] / 100 . '+' . $data['threshold']);
+  if (!image_toolkit_invoke('sharpen', $image, $args)) {
+    watchdog('imagemagick', 'Image sharpen failed using the %toolkit toolkit on %path (%mimetype, %dimensions)', array(
+      '%toolkit' => $image->toolkit,
+      '%path' => $image->source,
+      '%mimetype' => $image->info['mime_type'],
+      '%dimensions' => $image->info['height'] . 'x' . $image->info['height'],
+    ), WATCHDOG_ERROR);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+/**
+ * Image effect form callback; Provides input for sharpen image effect.
+ */
+function imagemagick_advanced_sharpen_effect_form($data) {
+  $form = array();
+   $form['radius'] = array(
+    '#type' => 'number',
+    '#title' => t('Radius'),
+    '#description' => t('Radius of an area around each pixel that will be used for calculation.'),
+    '#default_value' => isset($data['radius']) ? $data['radius'] : 1.0,
+    '#min' => 0.0,
+    '#max' => 999.0,
+    '#step' => 0.1,
+    '#required' => TRUE,
+  );
+  $form['sigma'] = array(
+    '#type' => 'number',
+    '#title' => t('Sigma'),
+    '#description' => t('Defines how rapidly strength of the sharpening reduces within the radius. It is not recommended to set it larger than radius.'),
+    '#default_value' => isset($data['sigma']) ? $data['sigma'] : 1.0,
+    '#min' => 0.0,
+    '#max' => 999.0,
+    '#step' => 0.1,
+    '#required' => TRUE,
+  );
+  $form['amount'] = array(
+    '#type' => 'number',
+    '#title' => t('Amount'),
+    '#description' => t('Strength of the sharpening effect.'),
+    '#default_value' => isset($data['amount']) ? $data['amount'] : 100,
+    '#min' => 0,
+    '#max' => 999,
+    '#step' => 1,
+    '#field_suffix' => t('%'),
+    '#required' => TRUE,
+  );
+  $form['threshold'] = array(
+    '#type' => 'number',
+    '#title' => t('Threshold'),
+    '#description' => t('Defines sensitivity of the effect. Higher values help to avoid sharpening of smoother areas.'),
+    '#default_value' => isset($data['threshold']) ? $data['threshold'] : 0.05,
+    '#min' => 0.0,
+    '#max' => 99.0,
+    '#step' => 0.01,
+    '#required' => TRUE,
+  );
+  return $form;
+}
