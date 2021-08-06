@@ -138,7 +138,6 @@ function image_imagemagick_auto_orient(stdClass $image) {
  * @see image_sharpen()
  */
 function image_imagemagick_sharpen(stdClass $image, $args) {
-  var_dump($args);
   $image->ops[] = '-unsharp ' . $args;
   return TRUE;
 }
@@ -273,6 +272,7 @@ function imagemagick_advanced_sharpen_effect_form($data) {
     '#min' => 0.0,
     '#max' => 999.0,
     '#step' => 0.1,
+    '#field_suffix' => t('pix'),
     '#required' => TRUE,
   );
   $form['sigma'] = array(
@@ -283,6 +283,7 @@ function imagemagick_advanced_sharpen_effect_form($data) {
     '#min' => 0.0,
     '#max' => 999.0,
     '#step' => 0.1,
+    '#field_suffix' => t('pix'),
     '#required' => TRUE,
   );
   $form['amount'] = array(
